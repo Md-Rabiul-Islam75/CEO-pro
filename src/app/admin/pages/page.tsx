@@ -100,7 +100,13 @@ export default function PagesList() {
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-1 text-ink-faint">
                     <Link
-                      href="/admin/pages"
+                      href={
+                        p.slug === "/builds-software"
+                          ? "/admin/pages/builds-software"
+                          : p.slug === "/my-story"
+                          ? "/admin/pages/my-story"
+                          : "/admin/pages"
+                      }
                       className="rounded-md px-2.5 py-1 text-xs font-semibold text-brand-blue hover:bg-brand-blue-tint"
                     >
                       Edit blocks
