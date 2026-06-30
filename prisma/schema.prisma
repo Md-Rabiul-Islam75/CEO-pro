@@ -1,0 +1,323 @@
+// Prisma schema for the ABM Whaiduzzaman site.
+// Datasource uses the connection built in prisma.config.ts (Postgres, schema = "ceo").
+//
+// CMS model: Sections (pillars) -> Pages -> Blocks (page builder).
+// Reusable Collections (Press, Events, Books, Videos, Shows, Wallpapers) are
+// referenced by blocks. MediaAsset is the Firebase/YouTube media library.
+// Settings is a key/value store for global config (social links, banner, etc.).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Connection URL lives in prisma.config.ts (Prisma 7). The runtime
+  // PrismaClient connects via a driver adapter (@prisma/adapter-pg).
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Role {
+  ADMIN
+  EDITOR
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+}
+
+/// The block palette — one type per content pattern found across the site.
+enum BlockType {
+  HERO
+  QUOTE
+  PILLAR_CARDS
+  TIMELINE
+  RICH_TEXT
+  STATS
+  PRESS_GRID
+  BOOKS
+  LOGO_GRID
+  EVENTS
+  VIDEO_GALLERY
+  SHOW_LIST
+  IMAGE_GALLERY
+  PODCAST
+  CONTACT_FORM
+  NEWSLETTER
+}
+
+enum MediaKind {
+  IMAGE
+  VIDEO
+}
+
+enum MediaProvider {
+  FIREBASE
+  YOUTUBE
+  EXTERNAL
+}
+
+enum EventKind {
+  UPCOMING
+  PAST
+}
+
+// ---------------------------------------------------------------------------
+// Auth
+// ---------------------------------------------------------------------------
+
+/// Admin/editor accounts for the /admin panel (JWT auth).
+model AdminUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         Role      @default(ADMIN)
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  posts Post[]
+
+  @@map("admin_users")
+}
+
+// ---------------------------------------------------------------------------
+// Structure: Sections (pillars) -> Pages -> Blocks
+// ---------------------------------------------------------------------------
+
+/// A sidebar pillar (e.g. "ABM Whaiduzzaman", "One-Focus", "Ventures").
+/// Toggle `isActive` to show/hide the whole pillar in the sidebar.
+model Section {
+  id        String   @id @default(cuid())
+  title     String
+  tagline   String
+  /// Accent token ("green" | "blue") or a hex value for custom pillars.
+  accent    String   @default("green")
+  slug      String   @unique
+  position  Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pages Page[]
+
+  @@index([isActive, position])
+  @@map("sections")
+}
+
+/// A sidebar link / content page. Belongs to a Section; composed of Blocks.
+model Page {
+  id             String        @id @default(cuid())
+  slug           String        @unique
+  title          String
+  navLabel       String?
+  excerpt        String?
+  body           String?       @db.Text
+  status         ContentStatus @default(DRAFT)
+  isActive       Boolean       @default(true)
+  position       Int           @default(0)
+  seoTitle       String?
+  seoDescription String?
+  coverUrl       String?
+  publishedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  sectionId String?
+  section   Section? @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+
+  blocks Block[]
+
+  @@index([status])
+  @@index([sectionId, position])
+  @@map("pages")
+}
+
+/// One content block on a page. `data` holds the type-specific payload
+/// (validated in app code per BlockType).
+model Block {
+  id        String    @id @default(cuid())
+  type      BlockType
+  position  Int       @default(0)
+  isVisible Boolean   @default(true)
+  data      Json      @default("{}")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  pageId String
+  page   Page   @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@index([pageId, position])
+  @@map("blocks")
+}
+
+// ---------------------------------------------------------------------------
+// Media library
+// ---------------------------------------------------------------------------
+
+/// Reusable media: Firebase-hosted images/files and YouTube references.
+model MediaAsset {
+  id        String        @id @default(cuid())
+  url       String
+  kind      MediaKind     @default(IMAGE)
+  provider  MediaProvider @default(FIREBASE)
+  alt       String?
+  /// Set for YOUTUBE provider — the parsed video id for embedding.
+  youtubeId String?
+  width     Int?
+  height    Int?
+  sizeBytes Int?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([kind])
+  @@map("media_assets")
+}
+
+// ---------------------------------------------------------------------------
+// Reusable collections (referenced by blocks)
+// ---------------------------------------------------------------------------
+
+/// Press / article cards (Home, Press Kit, Blog).
+model PressItem {
+  id        String   @id @default(cuid())
+  category  String   @default("PRESS")
+  title     String
+  imageUrl  String?
+  link      String?
+  date      DateTime?
+  position  Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, position])
+  @@map("press_items")
+}
+
+/// Speaking events — upcoming and past.
+model Event {
+  id        String    @id @default(cuid())
+  name      String
+  date      DateTime?
+  location  String?
+  link      String?
+  videoUrl  String?
+  kind      EventKind @default(UPCOMING)
+  position  Int       @default(0)
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([kind, position])
+  @@map("events")
+}
+
+/// Books / products. `buyLinks` is a JSON array of { label, url }.
+model Book {
+  id          String   @id @default(cuid())
+  title       String
+  coverUrl    String?
+  description String?  @db.Text
+  accent      String?
+  buyLinks    Json     @default("[]")
+  position    Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive, position])
+  @@map("books")
+}
+
+/// YouTube videos (Shows clips, podcast episodes, event recordings).
+model Video {
+  id           String   @id @default(cuid())
+  title        String
+  youtubeUrl   String
+  youtubeId    String?
+  thumbnailUrl String?
+  category     String?
+  position     Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([isActive, position])
+  @@map("videos")
+}
+
+/// Original shows (DailyVee, AskGaryVee, etc.).
+model Show {
+  id          String   @id @default(cuid())
+  name        String
+  logoUrl     String?
+  description String?  @db.Text
+  link        String?
+  bgColor     String?
+  videoUrl    String?
+  position    Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive, position])
+  @@map("shows")
+}
+
+/// Downloadable wallpapers / quote graphics.
+model Wallpaper {
+  id        String   @id @default(cuid())
+  title     String?
+  imageUrl  String
+  position  Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, position])
+  @@map("wallpapers")
+}
+
+// ---------------------------------------------------------------------------
+// Blog & global settings
+// ---------------------------------------------------------------------------
+
+/// Blog & Articles.
+model Post {
+  id             String        @id @default(cuid())
+  slug           String        @unique
+  title          String
+  excerpt        String?
+  body           String?       @db.Text
+  coverUrl       String?
+  status         ContentStatus @default(DRAFT)
+  publishedAt    DateTime?
+  seoTitle       String?
+  seoDescription String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  authorId String?
+  author   AdminUser? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([status, publishedAt])
+  @@map("posts")
+}
+
+/// Key/value store for global config: socialLinks, newsletter, topBanner,
+/// footer, siteSeo. `value` holds arbitrary JSON per key.
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json     @default("{}")
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}

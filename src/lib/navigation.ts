@@ -1,10 +1,15 @@
 /**
  * Sidebar navigation model.
  *
- * Kept as plain data so it can later be sourced from the database and
- * edited from the /admin panel without touching the layout components.
- * The three "pillars" mirror the brand architecture:
- *   builds technology · trains entrepreneurs · creates brands
+ * Two stable pillars drive the sidebar:
+ *   ABM Whaiduzzaman · builds technology   (with a Training dropdown)
+ *   Ventures         · creates brands
+ *
+ * Training programs (One-Focus, etc.) are NOT a pillar — they're a dynamic
+ * dropdown under ABM. Admin creates a program, flips it active, and it appears
+ * here. Each program is a single landing page (/training/<slug>).
+ *
+ * Kept as plain data so it can later be sourced from the database.
  */
 
 export type NavLink = {
@@ -12,20 +17,30 @@ export type NavLink = {
   href: string;
 };
 
+/** Expandable "Training Entrepreneurs / SME" dropdown, listing active programs. */
+export type TrainingGroup = {
+  label: string;
+  programs: NavLink[];
+};
+
 export type NavSection = {
-  /** Pillar title, e.g. "ABM WHAIDUZZAMAN" */
   title: string;
-  /** Tagline under the title, e.g. "builds technology" */
   tagline: string;
-  /** Accent used for the active state of this pillar */
   accent: "green" | "blue";
   links: NavLink[];
+  /** Optional "Programs and Master Classes" dropdown, rendered after `links`. */
+  training?: TrainingGroup;
+  /** Links rendered after the dropdown (e.g. The Book, Blog, Podcast…). */
+  linksAfter?: NavLink[];
 };
 
 export const BRAND = {
   name: "ABM WHAIDUZZAMAN",
   tagline: "builds technology",
 };
+
+/** Standalone global link shown at the bottom of the sidebar (above social). */
+export const CONTACT_LINK: NavLink = { label: "Contact", href: "/contact" };
 
 export const NAV_SECTIONS: NavSection[] = [
   {
@@ -40,22 +55,19 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Clients & Case Studies", href: "/case-studies" },
       { label: "Press Kit", href: "/press-kit" },
       { label: "Speaking & Consulting", href: "/speaking" },
-      { label: "Contact", href: "/contact" },
     ],
-  },
-  {
-    title: "ONE-FOCUS",
-    tagline: "trains entrepreneurs",
-    accent: "green",
-    links: [
-      { label: "About One-Focus", href: "/one-focus" },
-      { label: "Programs & Masterclasses", href: "/one-focus/programs" },
-      { label: "The Book", href: "/one-focus/book" },
+    training: {
+      label: "Programs and Master Classes",
+      programs: [
+        // Active programs (admin-managed). One-Focus is the first.
+        { label: "One-Focus", href: "/training/one-focus" },
+      ],
+    },
+    linksAfter: [
+      { label: "The Book", href: "/the-book" },
       { label: "Blog & Articles", href: "/blog" },
       { label: "Podcast & Videos", href: "/podcast" },
       { label: "Free Resources", href: "/resources" },
-      { label: "The Academy", href: "/academy" },
-      { label: "Book a Session", href: "/book-a-session" },
     ],
   },
   {

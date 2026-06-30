@@ -18,6 +18,9 @@
   --color-brand-blue-soft: #e0f2fe;
   --color-brand-blue-tint: #f0f9ff;
 
+  /* Sidebar surface (vivid blue, white text). Adjustable here. */
+  --color-sidebar: #0284c7;
+
   /* Neutrals */
   --color-ink: #0f172a;
   --color-ink-soft: #475569;

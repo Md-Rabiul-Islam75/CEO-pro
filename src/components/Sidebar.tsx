@@ -3,33 +3,42 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  BRAND,
+  CONTACT_LINK,
   NAV_SECTIONS,
   SOCIAL_LINKS,
   type NavLink as NavLinkType,
   type NavSection,
+  type TrainingGroup,
 } from "@/lib/navigation";
 import SocialIcon from "./SocialIcon";
+import BrandSignature from "./BrandSignature";
 
 const MotionLink = motion.create(Link);
 
+/** Is the given href the active route (exact or nested)? */
+function isActive(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(href + "/");
+}
+
 /**
- * A single submenu link with a left-to-right green wipe on hover.
- * The green fill is an absolutely-positioned layer whose scaleX animates
- * 0 -> 1 from its left edge; the label sits above it and flips to white.
+ * A submenu link with a left-to-right green wipe on hover (white text on the
+ * blue sidebar; the label flips to white over the green fill).
  */
 function NavItem({
   link,
   accent,
   active,
   onNavigate,
+  prominent = false,
 }: {
   link: NavLinkType;
   accent: NavSection["accent"];
   active: boolean;
   onNavigate?: () => void;
+  /** Larger text (like a heading) — used for the standalone Contact link. */
+  prominent?: boolean;
 }) {
   const solid = accent === "green" ? "bg-brand-green" : "bg-brand-blue";
 
@@ -41,14 +50,13 @@ function NavItem({
       animate="rest"
       whileHover="hover"
       whileFocus="hover"
-      className="group relative block overflow-hidden rounded-md px-3 py-1.5 text-[13px] font-medium uppercase tracking-wide"
+      className={`group relative block overflow-hidden rounded-md px-3 py-1.5 font-bold uppercase tracking-wide ${
+        prominent ? "text-sm" : "text-[13px]"
+      }`}
     >
-      {/* Active state: solid accent fill that's always visible */}
       {active && (
         <span className={`absolute inset-0 ${solid} shadow-sm`} aria-hidden />
       )}
-
-      {/* Hover wipe: green, left-to-right (skipped when already active) */}
       {!active && (
         <motion.span
           aria-hidden
@@ -57,10 +65,9 @@ function NavItem({
           transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
         />
       )}
-
       <span
         className={`relative z-10 transition-colors duration-300 ${
-          active ? "text-white" : "text-ink-soft group-hover:text-white"
+          active ? "text-white" : "text-white/85 group-hover:text-white"
         }`}
       >
         {link.label}
@@ -69,72 +76,201 @@ function NavItem({
   );
 }
 
-function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
+const Chevron = ({ open }: { open: boolean }) => (
+  <motion.svg
+    viewBox="0 0 24 24"
+    className="ml-2 h-4 w-4 shrink-0"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    animate={{ rotate: open ? 180 : 0 }}
+    transition={{ duration: 0.2 }}
+  >
+    <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+  </motion.svg>
+);
+
+/** Expandable "Programs and Master Classes" dropdown, listing active programs. */
+function TrainingDropdown({
+  group,
+  onNavigate,
+}: {
+  group: TrainingGroup;
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
+  const hasActive = group.programs.some((p) => isActive(pathname, p.href));
+  const [open, setOpen] = useState(hasActive);
 
   return (
-    <div className="flex h-full flex-col gap-8 overflow-y-auto scroll-slim px-7 py-8">
-      {/* Brand */}
-      <Link
-        href="/"
-        onClick={onNavigate}
-        className="block"
+    <div className="mt-0.5">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between rounded-md px-3 py-1.5 text-[13px] font-bold uppercase tracking-wide text-white/85 transition-colors hover:bg-white/10 hover:text-white"
       >
-        <h1 className="text-xl font-extrabold tracking-tight text-ink">
-          {BRAND.name}
-        </h1>
-        <p className="mt-0.5 text-[11px] uppercase tracking-[0.18em] text-ink-faint">
-          {BRAND.tagline}
-        </p>
-      </Link>
+        <span className="flex-1 text-left">{group.label}</span>
+        <Chevron open={open} />
+      </button>
 
-      {/* Pillars */}
-      <nav className="flex flex-1 flex-col gap-7">
-        {NAV_SECTIONS.map((section) => (
-          <div key={section.title}>
-            <div className="mb-2">
-              <p className="text-sm font-bold uppercase tracking-wide text-ink">
-                {section.title}
-              </p>
-              <p
-                className={`text-[11px] uppercase tracking-[0.14em] ${
-                  section.accent === "green"
-                    ? "text-brand-green"
-                    : "text-brand-blue"
-                }`}
-              >
-                {section.tagline}
-              </p>
-            </div>
-            <ul className="flex flex-col gap-0.5">
-              {section.links.map((link) => {
-                const active =
-                  pathname === link.href ||
-                  (link.href !== "/" && pathname.startsWith(link.href + "/"));
-                return (
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.ul
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden pl-2.5"
+          >
+            {group.programs.map((p) => (
+              <li key={p.href} className="mt-0.5">
+                <NavItem
+                  link={p}
+                  accent="green"
+                  active={isActive(pathname, p.href)}
+                  onNavigate={onNavigate}
+                />
+              </li>
+            ))}
+          </motion.ul>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/** A pillar: clickable header that expands/collapses its submenu (accordion). */
+function PillarAccordion({
+  section,
+  onNavigate,
+}: {
+  section: NavSection;
+  onNavigate?: () => void;
+}) {
+  const pathname = usePathname();
+  const hrefs = [
+    ...section.links.map((l) => l.href),
+    ...(section.linksAfter?.map((l) => l.href) ?? []),
+    ...(section.training?.programs.map((p) => p.href) ?? []),
+  ];
+  const containsActive = hrefs.some((h) => isActive(pathname, h));
+  const [open, setOpen] = useState(containsActive);
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left transition-colors ${
+          open ? "bg-brand-green" : "hover:bg-white/10"
+        }`}
+      >
+        <span>
+          <span className="block text-sm font-bold uppercase tracking-wide text-white">
+            {section.title}
+          </span>
+          <span
+            className={`block text-[11px] uppercase tracking-[0.14em] ${
+              open ? "text-white/80" : "text-white/55"
+            }`}
+          >
+            {section.tagline}
+          </span>
+        </span>
+        <span className="text-white">
+          <Chevron open={open} />
+        </span>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
+          >
+            <ul className="mt-1 flex flex-col gap-0.5">
+              {section.links.map((link) => (
+                <li key={link.href}>
+                  <NavItem
+                    link={link}
+                    accent={section.accent}
+                    active={isActive(pathname, link.href)}
+                    onNavigate={onNavigate}
+                  />
+                </li>
+              ))}
+            </ul>
+
+            {section.training && (
+              <TrainingDropdown group={section.training} onNavigate={onNavigate} />
+            )}
+
+            {section.linksAfter && (
+              <ul className="mt-0.5 flex flex-col gap-0.5">
+                {section.linksAfter.map((link) => (
                   <li key={link.href}>
                     <NavItem
                       link={link}
                       accent={section.accent}
-                      active={active}
+                      active={isActive(pathname, link.href)}
                       onNavigate={onNavigate}
                     />
                   </li>
-                );
-              })}
-            </ul>
-          </div>
+                ))}
+              </ul>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
+  const pathname = usePathname();
+
+  return (
+    <div className="flex h-full flex-col overflow-y-auto scroll-slim px-7 py-8 text-white">
+      {/* Brand — signature placeholder (admin-editable later) */}
+      <Link href="/" onClick={onNavigate} className="block">
+        <BrandSignature className="h-12 w-auto text-white" />
+      </Link>
+
+      {/* Pillars (accordion) */}
+      <nav className="mt-8 flex flex-col gap-2">
+        {NAV_SECTIONS.map((section) => (
+          <PillarAccordion
+            key={section.title}
+            section={section}
+            onNavigate={onNavigate}
+          />
         ))}
       </nav>
+
+      {/* Standalone Contact (global, like garyvaynerchuk.com) */}
+      <div className="mt-4">
+        <NavItem
+          link={CONTACT_LINK}
+          accent="green"
+          active={pathname === CONTACT_LINK.href}
+          onNavigate={onNavigate}
+          prominent
+        />
+      </div>
 
       {/* Search */}
       <form
         action="/search"
-        className="flex items-center gap-2 rounded-full border border-line bg-white px-4 py-2"
+        className="mt-5 flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2"
       >
         <svg
           viewBox="0 0 24 24"
-          className="h-4 w-4 text-ink-faint"
+          className="h-4 w-4 text-white/70"
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
@@ -146,12 +282,12 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
           type="search"
           name="q"
           placeholder="Search"
-          className="w-full bg-transparent text-sm uppercase tracking-wide text-ink placeholder:text-ink-faint focus:outline-none"
+          className="w-full bg-transparent text-sm uppercase tracking-wide text-white placeholder:text-white/50 focus:outline-none"
         />
       </form>
 
       {/* Social */}
-      <div className="flex items-center gap-4 border-t border-line pt-5 text-ink-soft">
+      <div className="mt-auto flex items-center gap-4 border-t border-white/10 pt-5 text-white/80">
         {SOCIAL_LINKS.map((s) => (
           <a
             key={s.label}
@@ -175,15 +311,15 @@ export default function Sidebar() {
   return (
     <>
       {/* Mobile top bar */}
-      <div className="fixed inset-x-0 top-0 z-40 flex items-center justify-between border-b border-line bg-white/90 px-5 py-3 backdrop-blur lg:hidden">
-        <Link href="/" className="text-base font-extrabold tracking-tight">
-          {BRAND.name}
+      <div className="fixed inset-x-0 top-0 z-40 flex items-center justify-between border-b border-white/10 bg-sidebar px-5 py-3 lg:hidden">
+        <Link href="/" aria-label="Home">
+          <BrandSignature className="h-7 w-auto text-white" />
         </Link>
         <button
           type="button"
           aria-label="Toggle menu"
           onClick={() => setOpen((v) => !v)}
-          className="rounded-md p-1.5 text-ink hover:bg-slate-100"
+          className="rounded-md p-1.5 text-white hover:bg-white/10"
         >
           <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2">
             {open ? (
@@ -198,14 +334,14 @@ export default function Sidebar() {
       {/* Mobile overlay */}
       {open && (
         <div
-          className="fixed inset-0 z-40 bg-ink/30 lg:hidden"
+          className="fixed inset-0 z-40 bg-ink/40 lg:hidden"
           onClick={() => setOpen(false)}
         />
       )}
 
       {/* Sidebar panel */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-[var(--sidebar-width)] max-w-[85vw] transform border-r border-line bg-white transition-transform duration-200 lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-[var(--sidebar-width)] max-w-[85vw] transform bg-sidebar transition-transform duration-200 lg:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
