@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import AdminIcon from "@/components/admin/AdminIcon";
-import { Card, PageHeader, StatusPill, btnPrimary } from "@/components/admin/ui";
+import { Card, PageHeader, StatusPill, Toggle, btnPrimary } from "@/components/admin/ui";
 
 type Section = {
   id: string;
@@ -137,21 +137,11 @@ export default function SectionsPage() {
               </span>
 
               {/* Active toggle */}
-              <button
-                type="button"
-                role="switch"
-                aria-checked={s.isActive}
-                onClick={() => toggle(s.id)}
-                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
-                  s.isActive ? "bg-brand-green" : "bg-slate-300"
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                    s.isActive ? "translate-x-[22px]" : "translate-x-0.5"
-                  }`}
-                />
-              </button>
+              <Toggle
+                checked={s.isActive}
+                onChange={() => toggle(s.id)}
+                label={`Toggle ${s.title}`}
+              />
 
               {/* Actions */}
               <div className="flex shrink-0 items-center gap-1 text-ink-faint">

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import AdminIcon from "@/components/admin/AdminIcon";
-import { Card, PageHeader, StatusPill, btnPrimary } from "@/components/admin/ui";
+import { Card, PageHeader, StatusPill, Toggle, btnPrimary } from "@/components/admin/ui";
 
 type Program = {
   id: string;
@@ -128,29 +129,19 @@ export default function TrainingPage() {
                 </p>
               </div>
 
-              <button
-                type="button"
-                role="switch"
-                aria-checked={p.isActive}
-                onClick={() => toggle(p.id)}
-                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
-                  p.isActive ? "bg-brand-green" : "bg-slate-300"
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                    p.isActive ? "translate-x-[22px]" : "translate-x-0.5"
-                  }`}
-                />
-              </button>
+              <Toggle
+                checked={p.isActive}
+                onChange={() => toggle(p.id)}
+                label={`Toggle ${p.name}`}
+              />
 
               <div className="flex shrink-0 items-center gap-1 text-ink-faint">
-                <button
-                  type="button"
+                <Link
+                  href={`/admin/training/${p.slug}`}
                   className="rounded-md px-2.5 py-1 text-xs font-semibold text-brand-blue hover:bg-brand-blue-tint"
                 >
                   Edit page
-                </button>
+                </Link>
                 <button
                   type="button"
                   onClick={() => remove(p.id)}
