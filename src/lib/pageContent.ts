@@ -6,11 +6,15 @@
 import { withBuildsDefaults } from "./pages/buildsSoftware";
 import { withMyStoryDefaults } from "./pages/myStory";
 import { withNexalinxAslDefaults } from "./pages/nexalinxAsl";
+import { withProductsDefaults } from "./pages/products";
+import { withCaseStudiesDefaults } from "./pages/caseStudies";
 
 export const PAGE_REGISTRY: Record<string, (v: unknown) => unknown> = {
   "builds-software": withBuildsDefaults,
   "my-story": withMyStoryDefaults,
   "nexalinx-asl": withNexalinxAslDefaults,
+  products: withProductsDefaults,
+  "case-studies": withCaseStudiesDefaults,
 };
 
 /** Settings-table key for a page's stored content. */

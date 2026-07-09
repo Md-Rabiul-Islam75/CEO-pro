@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { getMyStory } from "@/lib/pages/getMyStory";
+import { isPagePublished } from "@/lib/getPageStatus";
 import StoryTimeline from "@/components/StoryTimeline";
 
 export const dynamic = "force-dynamic";
@@ -11,6 +13,8 @@ export const metadata: Metadata = {
 };
 
 export default async function MyStoryPage() {
+  if (!(await isPagePublished("/my-story"))) notFound();
+
   const { timeline, story } = await getMyStory();
 
   return (

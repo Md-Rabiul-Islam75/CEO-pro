@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import AdminIcon from "@/components/admin/AdminIcon";
 import ImageField from "@/components/admin/ImageField";
+import StatusToggle from "@/components/admin/StatusToggle";
+import { usePageStatus } from "@/components/admin/usePageStatus";
 import { Card, PageHeader, btnPrimary, btnGhost } from "@/components/admin/ui";
 import {
   DEFAULT_BUILDS_SOFTWARE,
@@ -59,6 +61,7 @@ export default function BuildsSoftwareEditor() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const ps = usePageStatus("/builds-software");
 
   useEffect(() => {
     fetch("/api/pages/builds-software")
@@ -123,6 +126,7 @@ export default function BuildsSoftwareEditor() {
                 Saved ✓
               </span>
             )}
+            <StatusToggle value={ps.status} onChange={ps.change} />
             <Link href="/builds-software" target="_blank" className={btnGhost}>
               <AdminIcon name="external" className="h-4 w-4" />
               View page

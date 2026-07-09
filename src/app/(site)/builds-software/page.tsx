@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { getBuildsSoftware } from "@/lib/pages/getBuildsSoftware";
+import { isPagePublished } from "@/lib/getPageStatus";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +12,8 @@ export const metadata: Metadata = {
 };
 
 export default async function BuildsSoftwarePage() {
+  if (!(await isPagePublished("/builds-software"))) notFound();
+
   const { banner, groups } = await getBuildsSoftware();
   const hasImage = !!banner.image;
 

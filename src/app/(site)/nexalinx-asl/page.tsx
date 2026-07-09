@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { getNexalinxAsl } from "@/lib/pages/getNexalinxAsl";
+import { isPagePublished } from "@/lib/getPageStatus";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +12,8 @@ export const metadata: Metadata = {
 };
 
 export default async function NexalinxAslPage() {
+  if (!(await isPagePublished("/nexalinx-asl"))) notFound();
+
   const { banner, companies } = await getNexalinxAsl();
   const hasImage = !!banner.image;
 

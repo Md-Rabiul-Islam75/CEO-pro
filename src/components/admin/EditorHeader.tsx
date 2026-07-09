@@ -1,8 +1,10 @@
 import Link from "next/link";
 import AdminIcon from "./AdminIcon";
+import StatusToggle from "./StatusToggle";
 import { PageHeader, btnPrimary, btnGhost } from "./ui";
+import type { PageStatus } from "@/lib/pageStatus";
 
-/** Shared header for page editors: back link, title, View + Save actions. */
+/** Shared header for page editors: back link, title, status + View + Save actions. */
 export default function EditorHeader({
   title,
   description,
@@ -10,6 +12,8 @@ export default function EditorHeader({
   onSave,
   saving,
   saved,
+  status,
+  onStatusChange,
 }: {
   title: string;
   description: string;
@@ -17,6 +21,8 @@ export default function EditorHeader({
   onSave?: () => void;
   saving?: boolean;
   saved?: boolean;
+  status?: PageStatus;
+  onStatusChange?: (v: PageStatus) => void;
 }) {
   return (
     <>
@@ -35,6 +41,9 @@ export default function EditorHeader({
               <span className="text-sm font-semibold text-brand-green">
                 Saved ✓
               </span>
+            )}
+            {status && onStatusChange && (
+              <StatusToggle value={status} onChange={onStatusChange} />
             )}
             <Link href={viewHref} target="_blank" className={btnGhost}>
               <AdminIcon name="external" className="h-4 w-4" />

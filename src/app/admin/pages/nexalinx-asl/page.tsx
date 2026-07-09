@@ -7,6 +7,7 @@ import BlockCard from "@/components/admin/BlockCard";
 import Field from "@/components/admin/Field";
 import ImageField from "@/components/admin/ImageField";
 import { SortableList, SortableItem } from "@/components/admin/Sortable";
+import { usePageStatus } from "@/components/admin/usePageStatus";
 import {
   DEFAULT_NEXALINX_ASL,
   withNexalinxAslDefaults,
@@ -24,6 +25,7 @@ export default function NexalinxAslEditor() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const ps = usePageStatus("/nexalinx-asl");
 
   useEffect(() => {
     fetch("/api/pages/nexalinx-asl")
@@ -74,6 +76,8 @@ export default function NexalinxAslEditor() {
         onSave={save}
         saving={saving}
         saved={saved}
+        status={ps.status}
+        onStatusChange={ps.change}
       />
 
       {loading ? (

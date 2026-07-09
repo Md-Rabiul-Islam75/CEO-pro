@@ -5,6 +5,8 @@ import Link from "next/link";
 import AdminIcon from "@/components/admin/AdminIcon";
 import ImageField from "@/components/admin/ImageField";
 import RichTextEditor from "@/components/admin/RichTextEditor";
+import StatusToggle from "@/components/admin/StatusToggle";
+import { usePageStatus } from "@/components/admin/usePageStatus";
 import { Card, PageHeader, btnPrimary, btnGhost } from "@/components/admin/ui";
 import {
   DEFAULT_MY_STORY,
@@ -21,6 +23,7 @@ export default function MyStoryEditor() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const ps = usePageStatus("/my-story");
 
   useEffect(() => {
     fetch("/api/pages/my-story")
@@ -84,6 +87,7 @@ export default function MyStoryEditor() {
                 Saved ✓
               </span>
             )}
+            <StatusToggle value={ps.status} onChange={ps.change} />
             <Link href="/my-story" target="_blank" className={btnGhost}>
               <AdminIcon name="external" className="h-4 w-4" />
               View page

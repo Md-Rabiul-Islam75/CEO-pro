@@ -1,11 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { NAV_SECTIONS, CONTACT_LINK } from "@/lib/navigation";
 import AdminIcon from "@/components/admin/AdminIcon";
 import { SortableList, SortableItem } from "@/components/admin/Sortable";
-import { Card, PageHeader, StatusPill, btnGhost } from "@/components/admin/ui";
+import ConfirmDialog from "@/components/admin/ConfirmDialog";
+import StatusToggle from "@/components/admin/StatusToggle";
+import { Card, PageHeader, StatusPill, btnGhost, btnPrimary } from "@/components/admin/ui";
+import {
+  statusOf,
+  withStatusDefaults,
+  type PageStatus,
+  type PageStatusMap,
+} from "@/lib/pageStatus";
 
 type Entry =
   | {
@@ -13,7 +21,6 @@ type Entry =
       id: string;
       label: string;
       href: string;
-      status: "PUBLISHED" | "DRAFT";
     }
   | { kind: "programs"; id: string; label: string; count: number };
 
@@ -44,14 +51,7 @@ const EDITORS: Record<string, string> = {
   "/ventures/invest": "/admin/pages/ventures/invest",
 };
 
-// Mock publish status + which collection a page pulls from (design only).
-const STATUS: Record<string, "PUBLISHED" | "DRAFT"> = {
-  "/builds-software": "PUBLISHED",
-  "/my-story": "PUBLISHED",
-  "/press-kit": "PUBLISHED",
-  "/blog": "PUBLISHED",
-  "/ventures/zariya-living": "PUBLISHED",
-};
+// Which collection a page pulls from (label only).
 const PULLS: Record<string, string> = {
   "/press-kit": "Press",
   "/speaking": "Events",
@@ -59,7 +59,6 @@ const PULLS: Record<string, string> = {
   "/podcast": "Videos",
   "/resources": "Resources",
 };
-const statusOf = (href: string): "PUBLISHED" | "DRAFT" => STATUS[href] ?? "DRAFT";
 
 // Build the admin structure straight from the public sidebar data, so the two
 // always match: section links → programs dropdown → links after.
@@ -74,7 +73,6 @@ const INITIAL: Section[] = NAV_SECTIONS.map((s, si) => ({
       id: `${si}-l${i}`,
       label: l.label,
       href: l.href,
-      status: statusOf(l.href),
     })),
     ...(s.training
       ? [
@@ -91,7 +89,6 @@ const INITIAL: Section[] = NAV_SECTIONS.map((s, si) => ({
       id: `${si}-a${i}`,
       label: l.label,
       href: l.href,
-      status: statusOf(l.href),
     })) ?? []),
   ],
 }));
@@ -100,6 +97,47 @@ let nid = 100;
 
 export default function PagesList() {
   const [sections, setSections] = useState<Section[]>(INITIAL);
+  const [statusMap, setStatusMap] = useState<PageStatusMap>({});
+  const [dirty, setDirty] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<{
+    sid: string;
+    id: string;
+    label: string;
+  } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/page-status")
+      .then((r) => r.json())
+      .then((d) => setStatusMap(withStatusDefaults(d)))
+      .catch(() => {});
+  }, []);
+
+  const setStatus = (href: string, value: PageStatus) => {
+    setStatusMap((m) => ({ ...m, [href]: value }));
+    setDirty(true);
+    setSaved(false);
+  };
+
+  async function saveStatus() {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/page-status", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(statusMap),
+      });
+      if (res.ok) {
+        setStatusMap(withStatusDefaults(await res.json()));
+        setDirty(false);
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2500);
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
 
   const updateSection = (sid: string, fn: (s: Section) => Section) =>
     setSections((ss) => ss.map((s) => (s.id === sid ? fn(s) : s)));
@@ -140,12 +178,38 @@ export default function PagesList() {
         title="Pages"
         description="Your public sidebar. Reorder pages, add submenu items, and open one to edit its blocks — changes here mirror the live site."
         action={
-          <Link href="/admin/sections" className={btnGhost}>
-            <AdminIcon name="sections" className="h-4 w-4" />
-            Manage sections
-          </Link>
+          <div className="flex items-center gap-3">
+            {saved && (
+              <span className="text-sm font-semibold text-brand-green">Saved ✓</span>
+            )}
+            {dirty && !saved && (
+              <span className="text-sm font-medium text-amber-600">
+                Unsaved changes
+              </span>
+            )}
+            <Link href="/admin/sections" className={btnGhost}>
+              <AdminIcon name="sections" className="h-4 w-4" />
+              Manage sections
+            </Link>
+            <button
+              type="button"
+              onClick={saveStatus}
+              disabled={saving || !dirty}
+              className={`${btnPrimary} disabled:opacity-50`}
+            >
+              {saving ? "Saving…" : "Save changes"}
+            </button>
+          </div>
         }
       />
+
+      <p className="mb-5 text-xs text-ink-faint">
+        Use the{" "}
+        <span className="font-semibold text-brand-green-dark">Published</span> /{" "}
+        <span className="font-semibold text-amber-700">Draft</span> switch on each
+        page to control whether it&apos;s live on the public site, then Save. A
+        draft page is hidden from the sidebar and returns a 404.
+      </p>
 
       <div className="space-y-6">
         {sections.map((section) => {
@@ -246,15 +310,10 @@ export default function PagesList() {
                                   )}
                                 </p>
                               </div>
-                              <StatusPill
-                                variant={
-                                  entry.status === "PUBLISHED"
-                                    ? "published"
-                                    : "draft"
-                                }
-                              >
-                                {entry.status}
-                              </StatusPill>
+                              <StatusToggle
+                                value={statusOf(statusMap, entry.href)}
+                                onChange={(v) => setStatus(entry.href, v)}
+                              />
                               {EDITORS[entry.href] ? (
                                 <Link
                                   href={EDITORS[entry.href]}
@@ -272,7 +331,13 @@ export default function PagesList() {
                               )}
                               <button
                                 type="button"
-                                onClick={() => removeEntry(section.id, entry.id)}
+                                onClick={() =>
+                                  setPendingDelete({
+                                    sid: section.id,
+                                    id: entry.id,
+                                    label: entry.label,
+                                  })
+                                }
                                 className="rounded-md p-1.5 text-ink-faint hover:bg-red-50 hover:text-red-500"
                                 aria-label="Delete page"
                               >
@@ -343,6 +408,22 @@ export default function PagesList() {
           Add or manage sections
         </Link>
       </div>
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title="Delete page"
+        message={
+          pendingDelete
+            ? `Remove "${pendingDelete.label}" from the sidebar list?`
+            : ""
+        }
+        confirmLabel="Delete"
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (pendingDelete) removeEntry(pendingDelete.sid, pendingDelete.id);
+          setPendingDelete(null);
+        }}
+      />
     </div>
   );
 }

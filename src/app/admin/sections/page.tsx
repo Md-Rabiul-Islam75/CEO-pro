@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import AdminIcon from "@/components/admin/AdminIcon";
 import Field from "@/components/admin/Field";
+import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import {
   Card,
   PageHeader,
@@ -27,6 +28,7 @@ export default function SectionsPage() {
   const [saved, setSaved] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [editing, setEditing] = useState<NavSectionMeta | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<NavSectionMeta | null>(null);
 
   useEffect(() => {
     fetch("/api/sections")
@@ -57,10 +59,8 @@ export default function SectionsPage() {
       return copy;
     });
 
-  const remove = (key: string) => {
-    if (!confirm("Remove this section from the sidebar?")) return;
+  const remove = (key: string) =>
     mutate((s) => s.filter((x) => x.key !== key));
-  };
 
   const addSection = () => {
     const fresh: NavSectionMeta = {
@@ -222,7 +222,7 @@ export default function SectionsPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => remove(s.key)}
+                    onClick={() => setPendingDelete(s)}
                     className="rounded-md p-1.5 hover:bg-red-50 hover:text-red-500"
                     aria-label="Delete"
                   >
@@ -255,6 +255,22 @@ export default function SectionsPage() {
           onSave={applyEdit}
         />
       )}
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title="Delete section"
+        message={
+          pendingDelete
+            ? `Remove "${pendingDelete.title || "this section"}" from the sidebar? Its page links stay intact.`
+            : ""
+        }
+        confirmLabel="Delete"
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (pendingDelete) remove(pendingDelete.key);
+          setPendingDelete(null);
+        }}
+      />
     </div>
   );
 }
