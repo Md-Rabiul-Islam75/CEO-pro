@@ -73,7 +73,7 @@ export default async function BuildsSoftwarePage() {
             <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-ink-faint">
               {group.heading}
             </h2>
-            <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {group.cards.map((card) => {
                 const Wrapper = card.link ? "a" : "div";
                 return (
@@ -86,35 +86,47 @@ export default async function BuildsSoftwarePage() {
                           rel: "noopener noreferrer",
                         }
                       : {})}
-                    className={`group flex flex-col rounded-2xl border border-line bg-white p-6 transition-all ${
-                      card.link ? "hover:-translate-y-1 hover:shadow-lg" : ""
+                    className={`group relative flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all duration-300 ${
+                      card.link
+                        ? "hover:-translate-y-1.5 hover:border-brand-blue-soft hover:shadow-[0_16px_40px_-16px_rgba(2,132,199,0.35)]"
+                        : "hover:border-brand-blue-soft hover:shadow-[0_16px_40px_-16px_rgba(2,132,199,0.22)]"
                     }`}
                   >
+                    {/* Accent bar on hover */}
+                    <span
+                      aria-hidden
+                      className="absolute inset-x-0 top-0 h-1 origin-left scale-x-0 bg-gradient-to-r from-brand-blue to-brand-green transition-transform duration-300 group-hover:scale-x-100"
+                    />
+
                     <div className="flex items-start justify-between gap-3">
-                      {card.logo ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={card.logo}
-                          alt={card.title}
-                          className="h-12 w-auto max-w-[7rem] object-contain"
-                        />
-                      ) : (
-                        <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-blue-tint text-lg font-extrabold text-brand-blue">
-                          {card.title.charAt(0) || "•"}
-                        </span>
-                      )}
+                      {/* Logo tile */}
+                      <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-line bg-slate-50">
+                        {card.logo ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={card.logo}
+                            alt={card.title}
+                            className="h-full w-full object-contain p-1.5"
+                          />
+                        ) : (
+                          <span className="flex h-full w-full items-center justify-center bg-gradient-to-br from-brand-blue to-brand-blue-dark text-xl font-extrabold text-white">
+                            {card.title.charAt(0) || "•"}
+                          </span>
+                        )}
+                      </span>
+
                       {card.badge && (
-                        <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
+                        <span className="shrink-0 rounded-full bg-brand-blue-tint px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-blue-dark">
                           {card.badge}
                         </span>
                       )}
                     </div>
 
-                    <h3 className="mt-4 text-xl font-extrabold tracking-tight text-ink">
+                    <h3 className="mt-4 text-lg font-extrabold leading-snug tracking-tight text-ink">
                       {card.title}
                     </h3>
                     {card.description && (
-                      <p className="mt-2 flex-1 text-sm leading-relaxed text-ink-soft">
+                      <p className="mt-2 flex-1 text-[13px] leading-relaxed text-ink-soft">
                         {card.description}
                       </p>
                     )}
