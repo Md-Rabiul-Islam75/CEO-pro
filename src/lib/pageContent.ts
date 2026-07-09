@@ -8,6 +8,8 @@ import { withMyStoryDefaults } from "./pages/myStory";
 import { withNexalinxAslDefaults } from "./pages/nexalinxAsl";
 import { withProductsDefaults } from "./pages/products";
 import { withCaseStudiesDefaults } from "./pages/caseStudies";
+import { withPressKitDefaults } from "./pages/pressKit";
+import { withSpeakingDefaults } from "./pages/speaking";
 
 export const PAGE_REGISTRY: Record<string, (v: unknown) => unknown> = {
   "builds-software": withBuildsDefaults,
@@ -15,6 +17,8 @@ export const PAGE_REGISTRY: Record<string, (v: unknown) => unknown> = {
   "nexalinx-asl": withNexalinxAslDefaults,
   products: withProductsDefaults,
   "case-studies": withCaseStudiesDefaults,
+  "press-kit": withPressKitDefaults,
+  speaking: withSpeakingDefaults,
 };
 
 /** Settings-table key for a page's stored content. */

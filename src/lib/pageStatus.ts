@@ -16,6 +16,8 @@ export const DEFAULT_PUBLISHED: string[] = [
   "/nexalinx-asl",
   "/products",
   "/case-studies",
+  "/press-kit",
+  "/speaking",
 ];
 
 /** The status for an href: stored override wins, else the built-in default. */
