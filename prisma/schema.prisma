@@ -326,3 +326,22 @@ model Setting {
 
   @@map("settings")
 }
+
+enum ContactStatus {
+  NEW
+  READ
+  REPLIED
+}
+
+model ContactMessage {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  subject   String?
+  message   String
+  status    ContactStatus @default(NEW)
+  createdAt DateTime      @default(now())
+
+  @@index([createdAt])
+  @@map("contact_messages")
+}

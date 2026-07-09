@@ -7,7 +7,7 @@ import AdminIcon from "@/components/admin/AdminIcon";
 import { SortableList, SortableItem } from "@/components/admin/Sortable";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import StatusToggle from "@/components/admin/StatusToggle";
-import { Card, PageHeader, StatusPill, btnGhost, btnPrimary } from "@/components/admin/ui";
+import { Card, PageHeader, btnGhost, btnPrimary } from "@/components/admin/ui";
 import {
   statusOf,
   withStatusDefaults,
@@ -388,13 +388,16 @@ export default function PagesList() {
                 <p className="font-semibold text-ink">{CONTACT_LINK.label}</p>
                 <p className="text-xs text-ink-faint">{CONTACT_LINK.href}</p>
               </div>
-              <StatusPill variant="published">PUBLISHED</StatusPill>
-              <span
-                className="cursor-default rounded-md px-2.5 py-1 text-xs font-semibold text-ink-faint"
-                title="Editor coming soon"
+              <StatusToggle
+                value={statusOf(statusMap, CONTACT_LINK.href)}
+                onChange={(v) => setStatus(CONTACT_LINK.href, v)}
+              />
+              <Link
+                href="/admin/pages/contact"
+                className="rounded-md px-2.5 py-1 text-xs font-semibold text-brand-blue hover:bg-brand-blue-tint"
               >
                 Edit blocks
-              </span>
+              </Link>
             </li>
           </ul>
         </Card>

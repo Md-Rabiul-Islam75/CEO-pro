@@ -19,6 +19,7 @@ export const DEFAULT_PUBLISHED: string[] = [
   "/press-kit",
   "/speaking",
   "/the-book",
+  "/contact",
 ];
 
 /** The status for an href: stored override wins, else the built-in default. */

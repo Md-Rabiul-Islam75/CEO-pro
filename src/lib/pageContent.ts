@@ -11,6 +11,7 @@ import { withCaseStudiesDefaults } from "./pages/caseStudies";
 import { withPressKitDefaults } from "./pages/pressKit";
 import { withSpeakingDefaults } from "./pages/speaking";
 import { withTheBookDefaults } from "./pages/theBook";
+import { withContactDefaults } from "./pages/contact";
 
 export const PAGE_REGISTRY: Record<string, (v: unknown) => unknown> = {
   "builds-software": withBuildsDefaults,
@@ -21,6 +22,7 @@ export const PAGE_REGISTRY: Record<string, (v: unknown) => unknown> = {
   "press-kit": withPressKitDefaults,
   speaking: withSpeakingDefaults,
   "the-book": withTheBookDefaults,
+  contact: withContactDefaults,
 };
 
 /** Settings-table key for a page's stored content. */
