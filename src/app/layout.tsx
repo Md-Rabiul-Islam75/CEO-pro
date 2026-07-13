@@ -5,8 +5,15 @@ import { getSettings } from "@/lib/getSettings";
 /** Metadata is dynamic so the favicon follows the uploaded brand mark. Prefer
  *  the square favicon tile (legible on light tabs); fall back to the signature. */
 export async function generateMetadata(): Promise<Metadata> {
-  const { brand } = await getSettings();
-  const icon = brand.favicon || brand.signature;
+  // The database may be unreachable at build time (e.g. `docker build` before
+  // Postgres is up) — fall back to no custom icon rather than failing the build.
+  let icon: string | undefined;
+  try {
+    const { brand } = await getSettings();
+    icon = brand.favicon || brand.signature || undefined;
+  } catch {
+    icon = undefined;
+  }
   return {
     title:
       "ABM Whaiduzzaman — builds technology · trains entrepreneurs · creates brands",

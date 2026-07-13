@@ -1,0 +1,54 @@
+# Self-contained stack: the Next.js app + a bundled Postgres.
+#
+#   docker compose up --build      # build + run
+#   open http://localhost:3000
+#
+# The bundled DB uses the local dev credentials below (change them before any
+# real exposure). To use an EXTERNAL / managed Postgres instead, see DOCKER.md
+# — point the app's DB_* (or DATABASE_URL) at it and drop the `db` service.
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ceo
+      POSTGRES_PASSWORD: ceo_local_password
+      POSTGRES_DB: ceo
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ceo -d ceo"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      # App → bundled Postgres (see src/lib/prisma.ts / prisma.config.ts).
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: ceo
+      DB_USER: ceo
+      DB_PASSWORD: ceo_local_password
+      DB_SCHEMA: ceo
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - node -e "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+volumes:
+  pgdata:
