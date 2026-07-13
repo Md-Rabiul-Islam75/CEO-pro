@@ -8,6 +8,14 @@ import AdminIcon from "./AdminIcon";
 export default function AdminSidebar() {
   const pathname = usePathname();
 
+  async function signOut() {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      window.location.href = "/login";
+    }
+  }
+
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line bg-white lg:flex">
       {/* Brand — generic panel identity (used by multiple managers) */}
@@ -74,6 +82,7 @@ export default function AdminSidebar() {
         </Link>
         <button
           type="button"
+          onClick={signOut}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-slate-50 hover:text-ink"
         >
           <AdminIcon name="logout" className="h-[18px] w-[18px] text-ink-faint" />

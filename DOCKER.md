@@ -55,6 +55,22 @@ docker run --rm -p 8011:8011 --env-file .env.docker ceo-pro
 Copy `.env.docker.example` → `.env.docker` and fill in the database values
 first. (`.env.docker` is git-ignored.)
 
+## Admin login (and reusing this product for another client)
+
+The admin area (`/admin`) is gated by a login. Credentials come from environment
+variables, so the **same codebase can be handed to another client — just change
+the env, no code edits**:
+
+| Variable         | Purpose                                   | Default (change it!)     |
+|------------------|-------------------------------------------|--------------------------|
+| `ADMIN_EMAIL`    | Login email                               | `ceo@gmail.com`          |
+| `ADMIN_PASSWORD` | Login password                            | `amiceo1`                |
+| `AUTH_SECRET`    | Signs the session cookie (use a long random string) | dev fallback   |
+
+Set these in `docker-compose.yml` (the `app` service) or your host's env. Visiting
+`/admin` without a valid session redirects to `/login`; sign out from the admin
+sidebar. **Always set a strong `AUTH_SECRET` and change the password in production.**
+
 ## Notes
 
 - **Schema**: the app uses the Postgres schema `ceo` (set via `DB_SCHEMA`);
