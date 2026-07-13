@@ -3,20 +3,20 @@
 The app is a stateless Next.js 16 container — **all content and uploaded images
 live in Postgres**, so nothing is stored on the container filesystem. On start,
 the container runs `prisma migrate deploy` (applying any pending migrations) and
-then serves the site on port **3000**.
+then serves the site on port **8011** (via docker-compose).
 
 ## 1. Quick start (self-contained: app + bundled Postgres)
 
 ```bash
 docker compose up --build
-# then open http://localhost:3000
+# then open http://localhost:8011
 ```
 
 This launches two services:
 
 | Service | What it is                          |
 |---------|-------------------------------------|
-| `app`   | The Next.js site (port 3000)        |
+| `app`   | The Next.js site (port 8011)        |
 | `db`    | Postgres 17 with a named volume `pgdata` (data persists across restarts) |
 
 The bundled DB starts **empty**, so the site shows the built-in default content
@@ -49,7 +49,7 @@ The app will run `prisma migrate deploy` against that database on startup.
 
 ```bash
 docker build -t ceo-pro .
-docker run --rm -p 3000:3000 --env-file .env.docker ceo-pro
+docker run --rm -p 8011:8011 --env-file .env.docker ceo-pro
 ```
 
 Copy `.env.docker.example` → `.env.docker` and fill in the database values

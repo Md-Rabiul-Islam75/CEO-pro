@@ -36,7 +36,7 @@ RUN npm init -y >/dev/null 2>&1 \
 # ---- Runner: production image ----
 FROM base AS runner
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV PORT=8011
 ENV HOSTNAME=0.0.0.0
 
 # Next standalone server + assets (self-contained; minimal node_modules).
@@ -65,5 +65,5 @@ RUN addgroup --system --gid 1001 nodejs \
  && chown -R nextjs:nodejs /app
 USER nextjs
 
-EXPOSE 3000
+EXPOSE 8011
 ENTRYPOINT ["./docker-entrypoint.sh"]

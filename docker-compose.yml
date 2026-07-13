@@ -1,7 +1,7 @@
 # Self-contained stack: the Next.js app + a bundled Postgres.
 #
 #   docker compose up --build      # build + run
-#   open http://localhost:3000
+#   open http://localhost:8011
 #
 # The bundled DB uses the local dev credentials below (change them before any
 # real exposure). To use an EXTERNAL / managed Postgres instead, see DOCKER.md
@@ -31,7 +31,7 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: production
-      PORT: "3000"
+      PORT: "8011"
       # App → bundled Postgres (see src/lib/prisma.ts / prisma.config.ts).
       DB_HOST: db
       DB_PORT: "5432"
@@ -40,11 +40,11 @@ services:
       DB_PASSWORD: ceo_local_password
       DB_SCHEMA: ceo
     ports:
-      - "3000:3000"
+      - "8011:8011"
     healthcheck:
       test:
         - CMD-SHELL
-        - node -e "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+        - node -e "fetch('http://localhost:8011/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
       interval: 15s
       timeout: 5s
       retries: 5

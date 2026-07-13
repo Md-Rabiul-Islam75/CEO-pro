@@ -6,6 +6,6 @@ set -e
 echo "→ Applying database migrations (prisma migrate deploy)…"
 npx prisma migrate deploy
 
-echo "→ Starting Next.js on port ${PORT:-3000}…"
+echo "→ Starting Next.js on port ${PORT:-8011}…"
 # Next standalone server (built with output: "standalone").
 exec node server.js
