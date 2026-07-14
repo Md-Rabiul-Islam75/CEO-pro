@@ -22,6 +22,7 @@ export default function AdminSidebar() {
             setCounts({
               "/admin/enrollments": d.enrollments || 0,
               "/admin/messages": d.messages || 0,
+              "/admin/subscribers": d.subscribers || 0,
             });
         })
         .catch(() => {});
