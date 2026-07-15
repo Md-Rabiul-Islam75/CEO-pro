@@ -30,3 +30,6 @@ next-env.d.ts
 
 # prisma
 /prisma/*.db
+
+# One-off content export (data + images) — do not commit
+/ceo-content.sql
