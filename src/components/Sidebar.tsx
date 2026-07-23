@@ -23,28 +23,27 @@ function isActive(pathname: string, href: string) {
 }
 
 /**
- * A submenu link with a left-to-right green wipe on hover (white text on the
- * blue sidebar; the label flips to white over the green fill).
+ * A submenu link, monochrome style: hover and active deepen the sidebar's own
+ * gradient with a translucent dark overlay (so the shade always matches the
+ * blue→indigo blend behind it). No accent colour at all.
  */
 function NavItem({
   link,
-  accent,
   active,
   onNavigate,
   prominent = false,
   trailing,
 }: {
   link: NavLinkType;
-  accent: NavSection["accent"];
+  /** Kept for call-site compatibility; the frosted style needs no accent. */
+  accent?: NavSection["accent"];
   active: boolean;
   onNavigate?: () => void;
-  /** Larger text (like a heading) — used for the standalone Contact link. */
+  /** Larger text (like a heading) — used for the standalone global links. */
   prominent?: boolean;
   /** Optional right-aligned element (e.g. a program status badge). */
   trailing?: React.ReactNode;
 }) {
-  const solid = accent === "green" ? "bg-brand-green" : "bg-brand-blue";
-
   return (
     <MotionLink
       href={link.href}
@@ -58,14 +57,17 @@ function NavItem({
       }`}
     >
       {active && (
-        <span className={`absolute inset-0 ${solid} shadow-sm`} aria-hidden />
+        <span
+          className="absolute inset-0 bg-black/25 ring-1 ring-inset ring-white/10"
+          aria-hidden
+        />
       )}
       {!active && (
         <motion.span
           aria-hidden
-          className="absolute inset-0 origin-left bg-brand-green"
+          className="absolute inset-0 origin-left bg-black/15"
           variants={{ rest: { scaleX: 0 }, hover: { scaleX: 1 } }}
-          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         />
       )}
       <span
@@ -170,7 +172,7 @@ function PillarAccordion({
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left transition-colors ${
-          open ? "bg-brand-green" : "hover:bg-white/10"
+          open ? "bg-black/25 ring-1 ring-inset ring-white/10" : "hover:bg-black/15"
         }`}
       >
         <span>
@@ -337,7 +339,7 @@ function SidebarBody({
               key={s.label}
               href={s.href}
               aria-label={s.label}
-              className="transition-colors hover:text-brand-green"
+              className="transition-colors hover:text-white"
               target="_blank"
               rel="noopener noreferrer"
             >
